@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-## wrapper taken from:
-# https://github.com/scipy/scipy/blob/master/scipy/cluster/vq.py
+cukmeans.py - Kmeans in PyCUDA
+
+This is an implemenations of the clustering algorithm k-means in PyCUDA.
+As the interface was taken from Scipy K-means[1], one can easily replace all usages.
+
+For more details check README.md or https://github.com/shackenberg/cukmeans.py
+
+[1] https://github.com/scipy/scipy/blob/master/scipy/cluster/vq.py
 
 ToDo:
 - IMPLEMENT REDUCTION ON THE GPU!!!!
