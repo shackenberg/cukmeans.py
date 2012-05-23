@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-official version
-
 ## wrapper taken from:
 # https://github.com/scipy/scipy/blob/master/scipy/cluster/vq.py
 
 ToDo:
-- DO PROFILING
 - IMPLEMENT REDUCTION ON THE GPU!!!!
 """
 
@@ -18,9 +15,11 @@ import scipy.cluster
 import scipy.cluster.vq
 import math
 from numpy.random import randint
-from numpy import shape, zeros, sqrt, argmin, minimum, array, \
-     newaxis, arange, compress, equal, common_type, single, double, take, \
-     std, mean
+from pycuda import driver, compiler, gpuarray
+import pycuda.autoinit
+#from numpy import shape, zeros, sqrt, argmin, minimum, array, \
+#     newaxis, arange, compress, equal, common_type, single, double, take, \
+#     std, mean
 
 SAVE_CODE_BOOKS = False
 USE_FLKMEANS = True
@@ -83,9 +82,13 @@ def cu_vq(obs, clusters):
     min_dist = gpuarray.zeros(points, dtype=np.float32)
 
     kmeans_kernel = mod.get_function('cu_vq')
-    kmeans_kernel(
-        driver.In(dataT), driver.In(clusters), cluster, min_dist,
-        np.int32(nclusters), np.int32(dimensions), np.int32(points),
+    kmeans_kernel(driver.In(dataT),
+                  driver.In(clusters),
+                  cluster,
+                  min_dist,
+                  np.int32(nclusters),
+                  np.int32(dimensions),
+                  np.int32(points),
         grid=(blocks, 1),
         block=(block_size, 1, 1),
     )
@@ -155,24 +158,15 @@ if __name__ == "__main__":
         print "flkmeans not found or error importing flann. Error:", str(e)
         USE_FLKMEANS = False
 
-    try:
-        from pycuda import driver, compiler, gpuarray
-        import pycuda.autoinit
-    except Exception, e:
-        print str(e)
-        USE_PYCUDA = False
-
-
     print "Starting demo modus: Benchmarking and error checking"
 
     dimensions = 128
     nclusters = 256
 
     rounds = 3  # for timeit
-    rtol = 0.001
+    rtol = 0.001  # for the relative error calculation
 
-    #for i in range(1):
-    for i in range(10,100,5):
+    for i in range(10, 100, 5):
         points = 512 * i
         data = np.random.randn(points, dimensions).astype(np.float32)
         print "points", points, "  dimensions", dimensions, "  nclusters", nclusters, "  rounds", rounds
@@ -182,7 +176,7 @@ if __name__ == "__main__":
         cpu_book, cpu_dist = scipy.cluster.vq.kmeans(data, clusters)
 
         if USE_FLKMEANS:
-            print 'flkmeans', timeit.timeit(lambda: flkmeans(data,nclusters, iter=1), number=rounds)
+            print 'flkmeans', timeit.timeit(lambda: flkmeans(data, nclusters, iter=1), number=rounds)
             fln_book, fln_dist = flkmeans(data, clusters)
             errorsCPU_FLN = nclusters * dimensions - sum(1 for a, b in zip(fln_book.ravel(), cpu_book.ravel()) if (abs(a - b) <= (rtol * abs(b))))
         else:
@@ -190,14 +184,10 @@ if __name__ == "__main__":
             errorsCPU_FLN = "-------"
             fln_dist = "-------"
 
-        if USE_PYCUDA:
-            print 'pycuda', timeit.timeit(lambda: cukmeans(data, clusters, iter=1), number=rounds)
-            gpu_book, gpu_dist = cukmeans(data, clusters)
-            errorsCPU_GPU = nclusters * dimensions - sum(1 for a, b in zip(gpu_book.ravel(), cpu_book.ravel()) if (abs(a - b) <= (rtol * abs(b))))
-        else:
-            print 'pycuda', "-------"
-            errorsCPU_GPU = "-------"
-            gpu_dist = "-------"
+        print 'pycuda', timeit.timeit(lambda: cukmeans(data, clusters, iter=1), number=rounds)
+        gpu_book, gpu_dist = cukmeans(data, clusters)
+        errorsCPU_GPU = nclusters * dimensions - sum(1 for a, b in zip(gpu_book.ravel(), cpu_book.ravel()) if (abs(a - b) <= (rtol * abs(b))))
+
         print "errorsCPU_GPU, cpu_dist, gpu_dist, fln_dist"
         print errorsCPU_GPU, cpu_dist, gpu_dist, fln_dist
         print '################'
