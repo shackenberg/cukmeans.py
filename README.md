@@ -1,7 +1,7 @@
 cukmeans.py  -  Kmeans in PyCUDA
 ===============================
 
-This is an implemenations of the [clustering algorithm k-means][2] in [PyCUDA][3]. As the interface was taken from [Scipy K-means][1], one can easily replace all useages.
+This is an implemenations of the [clustering algorithm k-means][2] in [PyCUDA][3]. As the interface was taken from [Scipy K-means][1], one can easily replace all usages.
 
 Sample usage
 ------------
