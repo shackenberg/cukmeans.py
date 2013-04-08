@@ -11,7 +11,7 @@ For more details check README.md or https://github.com/shackenberg/cukmeans.py
 [1] https://github.com/scipy/scipy/blob/master/scipy/cluster/vq.py
 
 ToDo:
-- IMPLEMENT REDUCTION ON THE GPU!!!!
+- IMPLEMENT REDUCTION ON THE GPU!
 """
 
 
@@ -23,9 +23,6 @@ import math
 from numpy.random import randint
 from pycuda import driver, compiler, gpuarray
 import pycuda.autoinit
-#from numpy import shape, zeros, sqrt, argmin, minimum, array, \
-#     newaxis, arange, compress, equal, common_type, single, double, take, \
-#     std, mean
 
 SAVE_CODE_BOOKS = False
 USE_FLKMEANS = True
